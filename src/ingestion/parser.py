@@ -10,6 +10,7 @@ from typing import List
 from docling.document_converter import DocumentConverter
 from docling.datamodel.pipeline_options import PdfPipelineOptions
 from docling.datamodel.base_models import InputFormat
+from docling.document_converter import PdfFormatOption
 
 
 @dataclass
@@ -39,16 +40,22 @@ def parse_pdf(pdf_path: str) -> List[ParsedChunk]:
     
     print(f"Parsing PDF: {pdf_path.name}")
     
-    # Configure Docling pipeline
+    # Configure Docling pipeline with image extraction enabled
     pipeline_options = PdfPipelineOptions()
-    pipeline_options.do_ocr = False          # skip OCR for now
-    pipeline_options.do_table_structure = True  # extract tables
-    pipeline_options.images_scale = 2.0      # image resolution
-    pipeline_options.generate_page_images = False
-    pipeline_options.generate_picture_images = True  # extract figures
+    pipeline_options.do_ocr = False
+    pipeline_options.do_table_structure = True
+    pipeline_options.images_scale = 2.0
+    pipeline_options.generate_page_images = True
+    pipeline_options.generate_picture_images = True
     
-    # Create converter
-    converter = DocumentConverter()
+    # Create converter with options
+    converter = DocumentConverter(
+        format_options={
+            InputFormat.PDF: PdfFormatOption(
+                pipeline_options=pipeline_options
+            )
+        }
+    )
     
     # Convert PDF
     print("Running Docling conversion...")
@@ -63,7 +70,7 @@ def parse_pdf(pdf_path: str) -> List[ParsedChunk]:
     print("Extracting text chunks...")
     for text_item in doc.texts:
         content = text_item.text.strip()
-        if len(content) < 30:  # skip very short fragments
+        if len(content) < 30:
             continue
         
         page_num = 1
@@ -82,11 +89,14 @@ def parse_pdf(pdf_path: str) -> List[ParsedChunk]:
     # --- Extract TABLE chunks ---
     print("Extracting table chunks...")
     for table_item in doc.tables:
-        # Convert table to markdown format
         try:
-            table_md = table_item.export_to_markdown()
+            # Pass doc to avoid deprecation warning
+            table_md = table_item.export_to_markdown(doc=doc)
         except Exception:
-            table_md = str(table_item)
+            try:
+                table_md = table_item.export_to_markdown()
+            except Exception:
+                table_md = str(table_item)
             
         if len(table_md.strip()) < 10:
             continue
@@ -114,28 +124,28 @@ def parse_pdf(pdf_path: str) -> List[ParsedChunk]:
         if picture_item.prov:
             page_num = picture_item.prov[0].page_no
         
-        # Save image to disk
         image_path = image_dir / f"page{page_num}_img{pic_index}.png"
         
         try:
-            with open(image_path, "wb") as f:
-                picture_item.image.pil_image.save(f, format="PNG")
-            
-            # Store image path as content for now
-            # Phase 5 will replace this with VLM summary
-            chunks.append(ParsedChunk(
-                content=f"[IMAGE: {image_path}]",
-                chunk_type="image",
-                page_number=page_num,
-                source_file=filename,
-                chunk_index=chunk_index
-            ))
-            chunk_index += 1
+            # Get image from the result
+            img = picture_item.get_image(result.document)
+            if img is not None:
+                img.save(str(image_path), format="PNG")
+                chunks.append(ParsedChunk(
+                    content=f"[IMAGE: {image_path}]",
+                    chunk_type="image",
+                    page_number=page_num,
+                    source_file=filename,
+                    chunk_index=chunk_index
+                ))
+                chunk_index += 1
+            else:
+                print(f"  Image {pic_index} returned None, skipping")
         except Exception as e:
             print(f"  Could not save image {pic_index}: {e}")
     
-    print(f"Parsing complete: {len(chunks)} chunks extracted")
-    print(f"  Text: {sum(1 for c in chunks if c.chunk_type == 'text')}")
+    print(f"\nParsing complete: {len(chunks)} chunks extracted")
+    print(f"  Text:   {sum(1 for c in chunks if c.chunk_type == 'text')}")
     print(f"  Tables: {sum(1 for c in chunks if c.chunk_type == 'table')}")
     print(f"  Images: {sum(1 for c in chunks if c.chunk_type == 'image')}")
     
