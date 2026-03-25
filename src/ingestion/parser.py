@@ -45,8 +45,8 @@ def parse_pdf(pdf_path: str) -> List[ParsedChunk]:
     pipeline_options.do_ocr = False
     pipeline_options.do_table_structure = True
     pipeline_options.images_scale = 2.0
-    pipeline_options.generate_page_images = True
-    pipeline_options.generate_picture_images = True
+    pipeline_options.generate_page_images = False   # don't render full pages
+    pipeline_options.generate_picture_images = True  # only extract figures
     
     # Create converter with options
     converter = DocumentConverter(
