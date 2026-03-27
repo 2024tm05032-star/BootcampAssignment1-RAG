@@ -51,7 +51,7 @@ def parse_pdf(pdf_path: str) -> List[ParsedChunk]:
     md_text = pymupdf4llm.to_markdown(str(pdf_path), page_chunks=True)
 
     for page_data in md_text:
-        page_num = page_data["metadata"]["page"] + 1
+        page_num = page_data["metadata"]["page_number"]
         content = page_data["text"].strip()
 
         if len(content) < 30:
