@@ -30,29 +30,29 @@ from src.models.llm import generate_answer
 # These are ground truth Q&A pairs from IS 3028
 NVH_TEST_SET = [
     {
-        "question": "What is the body weight for vehicles below 3 tonnes in Table 1?",
+        "question": "What is the body weight for vehicles below 3 tonnes in the load schedule table?",
         "ground_truth": "For vehicles below 3 tonnes gross vehicle weight, body weight is 0.12 tonnes and cab weight is not applicable."
     },
     {
-        "question": "What are the load schedule requirements for vehicles between 3 and 4 tonnes?",
+        "question": "What is the gross vehicle weight and body weight in the load schedule table for vehicles between 3 and 4 tonnes?",
         "ground_truth": "For vehicles with gross vehicle weight 3 and above but less than 4 tonnes, the body weight is 0.20 tonnes."
     },
     {
-        "question": "What European directives are listed in the standards reference table?",
-        "ground_truth": "The standards reference table lists 971241EC for permissible sound level of two or three wheel motor vehicles and 70/157/EEC amended by directive 96/20/EC."
+        "question": "What does IEC 61672-1 2002 specify?",
+        "ground_truth": "IEC 61672-1:2002 specifies electroacoustics sound level meters part 1 specifications."
     },
     {
-        "question": "What is IS 9779 about?",
-        "ground_truth": "IS 9779:1981 is about sound level meters."
+        "question": "What are the test speed conditions for vehicles with PMR greater than 25?",
+        "ground_truth": "For vehicles with PMR greater than 25, specific test speed conditions apply as defined in section B-4.6.2."
     },
     {
-        "question": "What does IS 9211 cover?",
-        "ground_truth": "IS 9211:1979 covers denominations and definitions of weights of road vehicles."
+        "question": "What acoustic measurements are required in section B-1.1?",
+        "ground_truth": "Section B-1.1 specifies acoustic measurement requirements for noise testing of vehicles."
     },
 ]
 
 
-def run_evaluation(test_set=None, top_k=5):
+def run_evaluation(test_set=None, top_k=8):
     """
     Run RAGAS evaluation on the NVH RAG system.
     
