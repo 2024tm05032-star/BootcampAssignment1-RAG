@@ -149,38 +149,42 @@ def print_results(results):
     
     df = results.to_pandas()
     
+    # Print available columns
+    print(f"\nMetrics available: {list(df.columns)}")
+    
     # Print per-question scores
     print("\nPer-question scores:")
     for i, row in df.iterrows():
-        print(f"\nQ{i+1}: {row['question'][:60]}...")
-        print(f"  Faithfulness:     {row.get('faithfulness', 'N/A'):.3f}")
-        print(f"  Answer relevancy: {row.get('answer_relevancy', 'N/A'):.3f}")
-        print(f"  Context precision:{row.get('context_precision', 'N/A'):.3f}")
+        print(f"\nQ{i+1}:")
+        for col in df.columns:
+            val = row[col]
+            if isinstance(val, float):
+                print(f"  {col}: {val:.3f}")
     
-    # Print aggregate scores
+    # Print aggregate scores for numeric columns
     print("\n" + "-" * 50)
     print("AGGREGATE SCORES (0.0 - 1.0, higher is better):")
-    print(f"  Faithfulness:      {df['faithfulness'].mean():.3f}")
-    print(f"  Answer relevancy:  {df['answer_relevancy'].mean():.3f}")
-    print(f"  Context precision: {df['context_precision'].mean():.3f}")
+    numeric_cols = df.select_dtypes(include='number').columns
+    scores = []
+    for col in numeric_cols:
+        mean_val = df[col].mean()
+        scores.append(mean_val)
+        print(f"  {col}: {mean_val:.3f}")
+    
+    # Overall grade
+    if scores:
+        avg = sum(scores) / len(scores)
+        if avg >= 0.8:
+            grade = "Excellent"
+        elif avg >= 0.6:
+            grade = "Good"
+        elif avg >= 0.4:
+            grade = "Fair"
+        else:
+            grade = "Needs improvement"
+        print(f"\nOverall grade: {grade} (avg: {avg:.3f})")
+    
     print("-" * 50)
-    
-    # Interpretation
-    avg = df[['faithfulness', 
-              'answer_relevancy', 
-              'context_precision']].mean().mean()
-    
-    if avg >= 0.8:
-        grade = "Excellent"
-    elif avg >= 0.6:
-        grade = "Good"
-    elif avg >= 0.4:
-        grade = "Fair"
-    else:
-        grade = "Needs improvement"
-    
-    print(f"\nOverall grade: {grade} (avg: {avg:.3f})")
-    
     return df
 
 
