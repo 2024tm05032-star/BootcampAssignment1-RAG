@@ -15,10 +15,10 @@ echo ""
 echo "Setting up .env file..."
 if [ ! -f .env ]; then
     cp .env.example .env
-    echo "Created .env — add your OpenAI API key!"
+    echo "Created .env - add your OpenAI API key!"
 else
     echo ".env already exists"
 fi
 
 echo ""
-echo "Done! Remember to add your API key to .env"
+echo "All done! Run: python main.py"
