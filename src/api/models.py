@@ -9,7 +9,7 @@ from datetime import datetime
 
 class HealthResponse(BaseModel):
     """Response model for /health endpoint"""
-    model_config = {"protected_namespaces": ()}  # add this line
+    model_config = {"protected_namespaces": ()} 
     status: str
     model_ready: bool
     indexed_documents: List[str]
